@@ -1,0 +1,88 @@
+import time
+import neopixel
+import board
+import digitalio
+from rainbowio import colorwheel
+
+# make a neopixel object for 10 pixels
+pixels = neopixel.NeoPixel(board.NEOPIXEL, 10, brightness=0.2, auto_write=False)
+
+# declare some inputs for button a and b
+button_A = digitalio.DigitalInOut(board.BUTTON_A)
+button_A.switch_to_input(pull=digitalio.Pull.DOWN)
+button_B = digitalio.DigitalInOut(board.BUTTON_B)
+button_B.switch_to_input(pull=digitalio.Pull.DOWN)
+
+# declare some color constants
+RED = (255, 0, 0)
+YELLOW = (255, 150, 0)
+GREEN = (0, 255, 0)
+CYAN = (0, 255, 255)
+BLUE = (0, 0, 255)
+PURPLE = (180, 0, 255)
+WHITE = (255, 255, 255)
+OFF = (0, 0, 0)
+RAINBOW = None
+
+colors = [OFF, RED, YELLOW, GREEN, CYAN, BLUE, PURPLE, WHITE]
+
+color_chase_demo = 0
+flash_demo = 0
+rainbow_demo = 0
+rainbow_cycle_demo = 0
+
+# declare a function to do a rainbow animation
+def rainbow(wait):
+    for j in range(255):
+        for i in range(len(pixels)):
+            idx = int(i + j)
+            pixels[i] = colorwheel(idx & 255)
+        pixels.show()
+        time.sleep(wait)
+
+# declare a function to cycle the rainbow
+def rainbow_cycle(wait):
+    for j in range(255):
+        for i in range(10):
+            rc_index = (i * 256 // 10) + j * 5
+            pixels[i] = colorwheel(rc_index & 255)
+        pixels.show()
+        #time.sleep(wait)
+
+color = BLUE
+
+button_a_pre = button_A.value
+
+press_count = False
+
+while True:
+    # gather input values
+    button_a_read = button_A.value
+
+    # print out the current and previous values
+    print("ButtonA Read is:", button_a_read)
+    print("ButtonA Prev is:", button_a_pre, '\n')
+
+    # set variables based on input
+    if button_a_read != button_a_pre:
+        print("Button A Has Changed")
+        if button_a_read:
+            press_count += 1
+            print("Button A changed from False to True")
+            print(press_count)
+        else:
+            print("Button A changed from True to False")
+        #time.sleep(1)
+
+    # calculate the modulo of press_count
+    press_mod = press_count % 8
+    print(press_mod)
+
+    # do ouput
+    pixels.fill(colors[press_mod])
+
+    pixels.show()
+
+    # save the button_a_read value for next time
+    button_a_pre = button_a_read
+    time.sleep(0.1)
